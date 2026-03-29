@@ -330,7 +330,10 @@ let activeTab = 'overview';
 
 function switchTab(tab) {
   activeTab = tab;
+  // Desktop nav
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  // Mobile nav
+  document.querySelectorAll('.mob-nav-btn[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `t-${tab}`));
   const map = {
     overview: renderOverview,
@@ -1194,6 +1197,27 @@ function setupUI() {
   el('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   el('login-btn').addEventListener('click', doLogin);
   el('logout-btn').addEventListener('click', doLogout);
+
+  // Mobile bottom nav
+  document.querySelectorAll('.mob-nav-btn[data-tab]').forEach(b => {
+    b.addEventListener('click', () => switchTab(b.dataset.tab));
+  });
+
+  // Mobile "Mehr" sheet
+  const sheet    = el('mob-sheet');
+  const backdrop = el('mob-backdrop');
+
+  function openSheet()  { sheet.classList.add('open'); backdrop.classList.add('open'); }
+  function closeSheet() { sheet.classList.remove('open'); backdrop.classList.remove('open'); }
+
+  el('mob-more-btn').addEventListener('click', openSheet);
+  backdrop.addEventListener('click', closeSheet);
+
+  document.querySelectorAll('.mob-sheet-item[data-tab]').forEach(b => {
+    b.addEventListener('click', () => { switchTab(b.dataset.tab); closeSheet(); });
+  });
+
+  el('mob-logout-btn').addEventListener('click', () => { closeSheet(); doLogout(); });
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
