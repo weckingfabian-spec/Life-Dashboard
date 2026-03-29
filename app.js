@@ -1228,8 +1228,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // onAuthStateChange handles INITIAL_SESSION (already logged in) + SIGNED_IN (new login) + SIGNED_OUT
+  let authHandled = false;
   db.auth.onAuthStateChange(async (event, session) => {
     if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !currentUser) {
+      authHandled = true;
       if (session) {
         currentUser = session.user;
         await loadState();
@@ -1239,8 +1241,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         showLogin();
       }
     } else if (event === 'SIGNED_OUT') {
+      authHandled = true;
       currentUser = null;
       showLogin();
     }
   });
+
+  // Fallback: if auth never initializes (stale session, network hang), show login after 6s
+  setTimeout(() => { if (!authHandled) showLogin(); }, 6000);
 });
