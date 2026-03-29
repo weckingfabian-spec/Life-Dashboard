@@ -1227,31 +1227,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
 
-  // Future login/logout changes
+  // onAuthStateChange handles INITIAL_SESSION (already logged in) + SIGNED_IN (new login) + SIGNED_OUT
   db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && !currentUser) {
-      currentUser = session.user;
-      await loadState();
-      showApp();
-      switchTab('overview');
+    if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !currentUser) {
+      if (session) {
+        currentUser = session.user;
+        await loadState();
+        showApp();
+        switchTab('overview');
+      } else {
+        showLogin();
+      }
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
       showLogin();
     }
   });
-
-  // Check session immediately (reliable across all Supabase versions)
-  try {
-    const { data: { session } } = await db.auth.getSession();
-    if (session) {
-      currentUser = session.user;
-      await loadState();
-      showApp();
-      switchTab('overview');
-    } else {
-      showLogin();
-    }
-  } catch (e) {
-    showLogin();
-  }
 });
