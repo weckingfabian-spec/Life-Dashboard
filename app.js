@@ -1223,21 +1223,35 @@ function setupUI() {
 document.addEventListener('DOMContentLoaded', async () => {
   setupUI();
 
-  // Register PWA service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
 
-  // Auth state handler — fires on load (INITIAL_SESSION) and on login/logout
+  // Future login/logout changes
   db.auth.onAuthStateChange(async (event, session) => {
-    if (session && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN')) {
+    if (event === 'SIGNED_IN' && !currentUser) {
       currentUser = session.user;
       await loadState();
       showApp();
       switchTab('overview');
-    } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+    } else if (event === 'SIGNED_OUT') {
       currentUser = null;
       showLogin();
     }
   });
+
+  // Check session immediately (reliable across all Supabase versions)
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      await loadState();
+      showApp();
+      switchTab('overview');
+    } else {
+      showLogin();
+    }
+  } catch (e) {
+    showLogin();
+  }
 });
